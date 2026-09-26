@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wallet Watch — Budget Tracker</title>
+  <link rel="stylesheet" href="styles.css" />
+  <!-- Chart.js for the category pie chart -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <span class="brand-logo">💰</span>
+      <div>
+        <h1>Wallet Watch</h1>
+        <p class="tagline">Set a limit. Track every spend. Stay in control.</p>
+      </div>
+    </div>
+    <button id="resetMonthBtn" class="btn btn-warning" title="Clear all items and start a fresh month">
+      🔄 Monthly Reset
+    </button>
+  </header>
+
+  <main class="container">
+    <!-- ============== TOP DASHBOARD ============== -->
+    <section class="dashboard">
+      <div class="balance-card">
+        <span class="balance-label">Remaining Balance</span>
+        <span id="remainingBalance" class="balance-value">₹0.00</span>
+        <div class="progress-wrapper">
+          <div class="progress-bar">
+            <div id="progressFill" class="progress-fill"></div>
+          </div>
+          <div class="progress-meta">
+            <span id="spentLabel">Spent: ₹0.00</span>
+            <span id="percentLabel">0%</span>
+          </div>
+        </div>
+        <div id="alertBanner" class="alert-banner" hidden>
+          <span id="alertText"></span>
+        </div>
+      </div>
+
+      <div class="limit-card">
+        <div class="limit-row">
+          <div>
+            <span class="limit-label">Monthly Limit</span>
+            <span id="limitDisplay" class="limit-value">₹0.00</span>
+          </div>
+          <button id="editLimitBtn" class="btn btn-secondary">Edit Limit</button>
+        </div>
+
+        <div id="limitEditor" class="limit-editor" hidden>
+          <input type="number" id="limitInput" min="0" step="0.01" placeholder="Enter new limit" />
+          <button id="saveLimitBtn" class="btn btn-primary">Save</button>
+          <button id="cancelLimitBtn" class="btn btn-ghost">Cancel</button>
+        </div>
+
+        <div class="limit-stats">
+          <div class="stat">
+            <span class="stat-label">Total Spent</span>
+            <span id="totalSpent" class="stat-value">₹0.00</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Items</span>
+            <span id="itemCount" class="stat-value">0</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============== ADD ITEM + CHART ============== -->
+    <section class="grid-2">
+      <div class="card">
+        <h2 class="card-title">➕ Add Purchase</h2>
+        <form id="itemForm" class="item-form">
+          <div class="form-row">
+            <label>
+              Item Name
+              <input type="text" id="itemName" placeholder="e.g. Sugar" required />
+            </label>
+            <label>
+              Category
+              <select id="itemCategory">
+                <option value="Groceries">🛒 Groceries</option>
+                <option value="Travel">✈️ Travel</option>
+                <option value="Entertainment">🎬 Entertainment</option>
+                <option value="Bills">🧾 Bills</option>
+                <option value="Food">🍽️ Food</option>
+                <option value="Shopping">🛍️ Shopping</option>
+                <option value="Health">💊 Health</option>
+                <option value="Other">📦 Other</option>
+              </select>
+            </label>
+          </div>
+          <div class="form-row">
+            <label>
+              Price (per unit)
+              <input type="number" id="itemPrice" min="0" step="0.01" placeholder="e.g. 100" required />
+            </label>
+            <label>
+              Quantity
+              <input type="number" id="itemQty" min="1" step="1" value="1" required />
+            </label>
+            <label>
+              Date
+              <input type="date" id="itemDate" required />
+            </label>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">Add Purchase</button>
+          <p id="formError" class="form-error" hidden></p>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">📊 Spending by Category</h2>
+        <div class="chart-wrapper">
+          <canvas id="categoryChart"></canvas>
+          <p id="chartEmpty" class="empty-state" hidden>No purchases yet. Add one to see the breakdown.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============== ITEMS LIST ============== -->
+    <section class="card">
+      <div class="list-header">
+        <h2 class="card-title">🗂️ All Purchases</h2>
+        <div class="filters">
+          <input type="text" id="searchInput" placeholder="🔍 Search by name..." />
+          <select id="filterCategory">
+            <option value="">All Categories</option>
+            <option value="Groceries">Groceries</option>
+            <option value="Travel">Travel</option>
+            <option value="Entertainment">Entertainment</option>
+            <option value="Bills">Bills</option>
+            <option value="Food">Food</option>
+            <option value="Shopping">Shopping</option>
+            <option value="Health">Health</option>
+            <option value="Other">Other</option>
+          </select>
+          <input type="date" id="filterDate" title="Filter by exact date" />
+          <button id="clearFiltersBtn" class="btn btn-ghost">Clear</button>
+        </div>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="items-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Category</th>
+              <th class="num">Price</th>
+              <th class="num">Qty</th>
+              <th class="num">Total</th>
+              <th>Date</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="itemsBody"></tbody>
+        </table>
+        <p id="emptyItems" class="empty-state" hidden>No purchases yet. Start by adding one above!</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <p>Wallet Watch • Your data is stored locally in your browser.</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
